@@ -1,5 +1,4 @@
 from common.response import ResponseBase
-from common.schema import DataSchemaBase
 from pydantic import BaseModel
 
 from . import model

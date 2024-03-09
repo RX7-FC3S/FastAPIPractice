@@ -2,7 +2,6 @@ from common.crud import CRUDBase, Session
 from sqlmodel import select
 
 from . import model
-from . import schema
 
 
 class CRUDItem(CRUDBase[model.Item]):
