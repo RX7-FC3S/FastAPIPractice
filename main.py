@@ -4,9 +4,6 @@ from contextlib import asynccontextmanager
 from database import create_all_tables
 
 
-from api.item.api import router as item_router
-
-
 # fastapi 的生命周期函数
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,7 +15,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # 添加路由
-app.include_router(item_router)
+from services.basic_data.item.item_info.api import router as router_item_info
+from services.basic_data.layout.bin_spec.api import router as router_bin_spec
+from services.basic_data.layout.bin_info.api import router as router_bin_info
+
+app.include_router(router_item_info)
+app.include_router(router_bin_spec)
+app.include_router(router_bin_info)
 
 
 if __name__ == "__main__":

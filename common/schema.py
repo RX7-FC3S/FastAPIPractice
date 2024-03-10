@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from sqlmodel import SQLModel
 from datetime import datetime
 
 
-class DataSchemaBase(BaseModel):
+class DataSchemaBase(SQLModel):
     id: int
     create_at: datetime
     create_by: int
