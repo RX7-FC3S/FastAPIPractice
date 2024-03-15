@@ -1,9 +1,9 @@
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.orm import declared_attr
 from sqlmodel import SQLModel, Field
 from datetime import datetime
 from typing import Optional
 import re
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 class DataModelBase(SQLModel):
@@ -16,6 +16,3 @@ class DataModelBase(SQLModel):
     create_by: Optional[int] = Field(default=0)
     update_at: Optional[datetime] = Field(default_factory=datetime.now)
     update_by: Optional[int] = Field(default=0)
-
-    def link(self, schema_field_name: str, model_field: InstrumentedAttribute):
-        self.model_fields[schema_field_name].json_schema_extra = {"sqlmodel_field": model_field}.__dict__

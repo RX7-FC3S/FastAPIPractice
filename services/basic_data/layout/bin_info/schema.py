@@ -10,8 +10,8 @@ from ..warehouse_area.model import WarehouseArea
 
 class BinInfo(DataSchemaBase):
     bin_code: str
-    bin_spec_name: str = Field(json_schema_extra={"table_field": BinSpec.bin_spec_name})
-    warehouse_area_name: str = Field(json_schema_extra={"table_field": WarehouseArea.warehouse_area_name})
+    bin_spec: BinSpec
+    warehouse_area: WarehouseArea
     row: int
     col: int
     level: int
@@ -20,9 +20,7 @@ class BinInfo(DataSchemaBase):
 class Request:
     class AddBinInfo(BaseModel):
         bin_code: str
-
         bin_spec_name: str
-
         warehouse_area_name: str
         row: int
         col: int

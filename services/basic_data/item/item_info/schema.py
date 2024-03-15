@@ -1,11 +1,11 @@
 from common.response import ResponseBase
-from common.schema import DataSchemaBase
-from pydantic import BaseModel
+from common.schema import SQLModel, DataSchemaBase
+
 
 from . import model
 
 
-class ItemInfo(BaseModel):
+class ItemInfo(SQLModel):
     item_code: str
     item_name: str
     base_unit: str

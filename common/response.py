@@ -1,6 +1,6 @@
-from pydantic import BaseModel
-from typing import Union, Any, TypeVar, Generic
+from typing import Any, TypeVar, Generic
 from fastapi_pagination import Page
+from pydantic import BaseModel
 
 T = TypeVar("T")
 

@@ -1,13 +1,13 @@
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlmodel.sql.expression import SelectOfScalar
+from typing import Optional, TypeVar, Generic
 from pydantic import BaseModel, create_model
-from typing import Optional, Union, TypeVar, Generic, Any
+from sqlmodel import SQLModel, select
+from sqlmodel.main import FieldInfo
+from pydantic import BaseModel
 from datetime import datetime
 from copy import deepcopy
 from enum import Enum
-
-from sqlmodel import SQLModel, select
-from pydantic import BaseModel
-from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlmodel.sql.expression import Select, SelectOfScalar
 
 
 def schema_optionalize(
@@ -28,7 +28,11 @@ def schema_optionalize(
             fields = fields.items()
         else:
             # Create iterator for specified fields
-            fields = ((field_name, fields[field_name]) for field_name in include if field_name in fields)
+            fields = (
+                (field_name, fields[field_name])
+                for field_name in include
+                if field_name in fields
+            )
             # Fields in 'include' that are not in the model are simply ignored, as in BaseModel.dict
         for field_name, field_info in fields:
             if field_name in exclude or not field_info.is_required:
@@ -50,7 +54,7 @@ def schema_optionalize(
     return decorator
 
 
-class AdvanceQueryLogic(Enum):
+class AdvancedQueryLogic(Enum):
     LESS = "<"
     LESS_OR_EQUAL = "<="
     EQUAL = "="
@@ -74,8 +78,8 @@ FieldValueType = TypeVar("FieldValueType")
 FieldNameEnumType = TypeVar("FieldNameEnumType", bound=Enum)
 
 
-class AdvanceQueryField(BaseModel, Generic[FieldValueType]):
-    logic: AdvanceQueryLogic
+class AdvancedQueryField(BaseModel, Generic[FieldValueType]):
+    logic: AdvancedQueryLogic
     value: FieldValueType
 
 
@@ -84,37 +88,74 @@ class AdvancedSortField(BaseModel, Generic[FieldNameEnumType]):
     order: AdvancedSortOrder
 
 
+# def as_advanced_query_and_sort_schema():
+#     def decorator(cls: type[BaseModel]) -> type[BaseModel]:
+#         new_field_definitions = {}
+#         fields = cls.model_fields
+
+#         # 添加高级查询字段
+#         for field_name, field_info in fields.items():
+#             assert field_info.annotation is not None
+#             new_field_type = Optional[AdvancedQueryField[field_info.annotation]]
+#             field_info.default = None
+#             new_field_info = deepcopy(field_info)
+#             new_field_definitions[field_name] = (new_field_type, new_field_info)
+
+#         # 添加高级排序字段
+#         sort_field_type = Optional[
+#             list[
+#                 AdvancedSortField[
+#                     Enum("FieldNameEnum", {field_name: field_name for field_name in cls.model_fields.keys()})  # type: ignore
+#                 ]
+#             ]
+#         ]
+
+#         new_field_definitions["sort__"] = (sort_field_type, [])
+
+#         return create_model(
+#             f"{cls.__name__}ForAdvancedQuery",
+#             __base__=cls,
+#             **new_field_definitions,
+#         )
+
+#     return decorator
+
+
+def get_deepest_field_type(field_info) -> str:
+    field_type = field_info["schema"]["type"]
+    if field_type in ["default", "nullable"]:
+        field_type = get_deepest_field_type(field_info["schema"])
+    return field_type
+
+
+def create_advanced_query_and_sort_model(cls: type[SQLModel]):
+    """
+    this is used in the decorate function as_advanced_query_and_sort_schema to recurse the cls and make its fields be optional
+    if KeyError: '__qualname__' occurs, see https://github.com/pydantic/pydantic/issues/8633
+    """
+    new_definition = {}
+    model_fields = cls.__pydantic_core_schema__["schema"]["fields"]  # type: ignore
+    for field_name, field_info in model_fields.items():  # type: ignore
+        field_type = field_info["schema"]["type"]
+        print(field_name, field_type)
+        if field_type == "model":
+            new_definition[field_name] = (
+                create_advanced_query_and_sort_model(field_info["schema"]["cls"]),  # type: ignore
+                FieldInfo(default=None),
+            )
+        else:
+            new_definition[field_name] = (
+                Optional[AdvancedQueryField[eval(get_deepest_field_type(field_info))]],
+                FieldInfo(default=None),
+            )
+    return create_model(f"{cls.__name__}Optional", __base__=cls, **new_definition)
+
+
 def as_advanced_query_and_sort_schema():
-    def decorator(cls: type[BaseModel]) -> type[BaseModel]:
-        new_field_definitions = {}
-        fields = cls.model_fields
+    def wrapper(cls: type[SQLModel]):
+        return create_advanced_query_and_sort_model(cls)
 
-        # 添加高级查询字段
-        for field_name, field_info in fields.items():
-            assert field_info.annotation is not None
-            new_field_type = Optional[AdvanceQueryField[field_info.annotation]]
-            field_info.default = None
-            new_field_info = deepcopy(field_info)
-            new_field_definitions[field_name] = (new_field_type, new_field_info)
-
-        # 添加高级排序字段
-        sort_field_type = Optional[
-            list[
-                AdvancedSortField[
-                    Enum("FieldNameEnum", {field_name: field_name for field_name in cls.model_fields.keys()})  # type: ignore
-                ]
-            ]
-        ]
-
-        new_field_definitions["sort__"] = (sort_field_type, [])
-
-        return create_model(
-            f"{cls.__name__}ForAdvanceQuery",
-            __base__=cls,
-            **new_field_definitions,
-        )
-
-    return decorator
+    return wrapper
 
 
 def advanced_query_and_sort(model: SQLModel, params: BaseModel) -> SelectOfScalar:
@@ -139,7 +180,9 @@ def advanced_query_and_sort(model: SQLModel, params: BaseModel) -> SelectOfScala
             """获取不在主表内的字段对应于主表的字段"""
             try:
                 if not schema_field_info.json_schema_extra:
-                    raise ValueError(f"table_field not found in 'json_schema_extra' of '{schema_field_name}'")
+                    raise ValueError(
+                        f"table_field not found in 'json_schema_extra' of '{schema_field_name}'"
+                    )
 
                 table_field = schema_field_info.json_schema_extra["table_field"]
 
