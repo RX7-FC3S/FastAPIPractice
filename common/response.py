@@ -1,4 +1,4 @@
-from typing import Any, TypeVar, Generic
+from typing import Any, TypeVar, Generic, Literal
 from fastapi_pagination import Page
 from pydantic import BaseModel
 
@@ -6,13 +6,13 @@ T = TypeVar("T")
 
 
 class ResponseBase(BaseModel, Generic[T]):
-    status: bool
+    success: bool
     message: str
-    data: T | list[T] | Page[T] | None
+    data: T | None
 
 
 class Response(object):
-    def __init__(self, status: bool, message: str, data: Any | None) -> None:
-        self.status = status
+    def __init__(self, success: bool, message: str, data: Any | None) -> None:
+        self.success = success
         self.message = message
         self.data = data

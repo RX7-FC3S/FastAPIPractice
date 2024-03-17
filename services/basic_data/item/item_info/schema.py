@@ -1,11 +1,13 @@
+from utils import as_advanced_query_and_sort_schema
 from common.response import ResponseBase
-from common.schema import SQLModel, DataSchemaBase
-
+from common.schema import DataSchemaBase
+from fastapi_pagination import Page
+from sqlmodel import SQLModel
 
 from . import model
 
 
-class ItemInfo(SQLModel):
+class ItemInfo(DataSchemaBase):
     item_code: str
     item_name: str
     base_unit: str
@@ -15,13 +17,14 @@ class Request:
     class AddItem(ItemInfo):
         pass
 
-    class GetItem(DataSchemaBase, ItemInfo):
+    @as_advanced_query_and_sort_schema()
+    class GetItems(ItemInfo):
         pass
 
 
 class Response:
-    class AddItem(ResponseBase[model.ItemInfo]):
+    class AddItem(ResponseBase[ItemInfo]):
         pass
 
-    class GetItems(ResponseBase[model.ItemInfo]):
+    class GetItems(ResponseBase[Page[ItemInfo]]):
         pass

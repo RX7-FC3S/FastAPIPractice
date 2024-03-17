@@ -1,5 +1,7 @@
-from common.model import DataModelBase, Field
+from common.model import DataModelBase
 from sqlmodel import Relationship
+from typing import Optional
+from sqlmodel import Field
 
 from ..bin_spec.model import BinSpec
 from ..warehouse_area.model import WarehouseArea

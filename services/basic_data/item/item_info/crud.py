@@ -1,4 +1,5 @@
 from common.crud import CRUDBase, Session
+from utils import advanced_query_and_sort
 from sqlmodel import select
 
 from . import model
@@ -11,8 +12,8 @@ class CRUDItem(CRUDBase[model.ItemInfo]):
         stmt = select(model.ItemInfo).where(model.ItemInfo.item_code == item_code)
         return db.exec(stmt).all()
 
-    def get_items(self, db: Session, params: schema.Request.GetItem):
-        stmt = select(model.ItemInfo).where(model.ItemInfo.item_code == params.item_code)
+    def get_items(self, db: Session, params: schema.Request.GetItems):
+        stmt = advanced_query_and_sort(model.ItemInfo, params)
         return db.exec(stmt).all()
 
 

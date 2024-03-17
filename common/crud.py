@@ -18,7 +18,12 @@ class CRUDBase(Generic[DataModel]):
         return instance
 
     def delete(self, db: Session, _id: int):
-        db.delete(self.get(db, _id))
+        db_record = self.get(db, _id)
+
+        if db_record is None:
+            raise Exception(f"数据不存在(id:{_id})")
+
+        db.delete(db_record)
         db.commit()
 
     def get(self, db: Session, _id: int):

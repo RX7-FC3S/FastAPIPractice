@@ -1,9 +1,9 @@
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from typing import Optional, TypeVar, Generic, Callable
 from sqlmodel.sql.expression import SelectOfScalar
-from typing import Optional, TypeVar, Generic
 from pydantic import BaseModel, create_model
 from sqlmodel import SQLModel, select
-from sqlmodel.main import FieldInfo
+from sqlmodel.main import FieldInfo, SQLModelMetaclass
 from pydantic import BaseModel
 from datetime import datetime
 from copy import deepcopy
@@ -28,11 +28,7 @@ def schema_optionalize(
             fields = fields.items()
         else:
             # Create iterator for specified fields
-            fields = (
-                (field_name, fields[field_name])
-                for field_name in include
-                if field_name in fields
-            )
+            fields = ((field_name, fields[field_name]) for field_name in include if field_name in fields)
             # Fields in 'include' that are not in the model are simply ignored, as in BaseModel.dict
         for field_name, field_info in fields:
             if field_name in exclude or not field_info.is_required:
@@ -88,39 +84,6 @@ class AdvancedSortField(BaseModel, Generic[FieldNameEnumType]):
     order: AdvancedSortOrder
 
 
-# def as_advanced_query_and_sort_schema():
-#     def decorator(cls: type[BaseModel]) -> type[BaseModel]:
-#         new_field_definitions = {}
-#         fields = cls.model_fields
-
-#         # 添加高级查询字段
-#         for field_name, field_info in fields.items():
-#             assert field_info.annotation is not None
-#             new_field_type = Optional[AdvancedQueryField[field_info.annotation]]
-#             field_info.default = None
-#             new_field_info = deepcopy(field_info)
-#             new_field_definitions[field_name] = (new_field_type, new_field_info)
-
-#         # 添加高级排序字段
-#         sort_field_type = Optional[
-#             list[
-#                 AdvancedSortField[
-#                     Enum("FieldNameEnum", {field_name: field_name for field_name in cls.model_fields.keys()})  # type: ignore
-#                 ]
-#             ]
-#         ]
-
-#         new_field_definitions["sort__"] = (sort_field_type, [])
-
-#         return create_model(
-#             f"{cls.__name__}ForAdvancedQuery",
-#             __base__=cls,
-#             **new_field_definitions,
-#         )
-
-#     return decorator
-
-
 def get_deepest_field_type(field_info) -> str:
     field_type = field_info["schema"]["type"]
     if field_type in ["default", "nullable"]:
@@ -128,7 +91,7 @@ def get_deepest_field_type(field_info) -> str:
     return field_type
 
 
-def create_advanced_query_and_sort_model(cls: type[SQLModel]):
+def create_advanced_query_and_sort_model(cls: type[SQLModel]) -> SQLModel:
     """
     this is used in the decorate function as_advanced_query_and_sort_schema to recurse the cls and make its fields be optional
     if KeyError: '__qualname__' occurs, see https://github.com/pydantic/pydantic/issues/8633
@@ -137,10 +100,9 @@ def create_advanced_query_and_sort_model(cls: type[SQLModel]):
     model_fields = cls.__pydantic_core_schema__["schema"]["fields"]  # type: ignore
     for field_name, field_info in model_fields.items():  # type: ignore
         field_type = field_info["schema"]["type"]
-        print(field_name, field_type)
         if field_type == "model":
             new_definition[field_name] = (
-                create_advanced_query_and_sort_model(field_info["schema"]["cls"]),  # type: ignore
+                Optional[create_advanced_query_and_sort_model(field_info["schema"]["cls"])],  # type: ignore
                 FieldInfo(default=None),
             )
         else:
@@ -151,80 +113,67 @@ def create_advanced_query_and_sort_model(cls: type[SQLModel]):
     return create_model(f"{cls.__name__}Optional", __base__=cls, **new_definition)
 
 
-def as_advanced_query_and_sort_schema():
-    def wrapper(cls: type[SQLModel]):
+def as_advanced_query_and_sort_schema() -> Callable[[type[SQLModel]], SQLModel]:
+    def wrapper(cls: type[SQLModel]) -> SQLModel:
         return create_advanced_query_and_sort_model(cls)
 
     return wrapper
 
 
-def advanced_query_and_sort(model: SQLModel, params: BaseModel) -> SelectOfScalar:
+def advanced_query_and_sort(
+    master_model: SQLModelMetaclass, params: SQLModel, mappings: dict[str, SQLModelMetaclass] | None = None
+) -> SelectOfScalar:
+    stmt: SelectOfScalar = select(master_model)
 
-    stmt: SelectOfScalar = select()
+    if mappings is not None:
+        for _, join_model in mappings.items():
+            stmt = stmt.join(join_model)
+    else:
+        pass
 
-    not_none_params = params.model_dump(exclude_none=True).items()
+    def add_where_clause(params: dict, model: SQLModelMetaclass = master_model):
+        nonlocal stmt
 
-    for model_field_name in model.model_fields.keys():
-        """将主表内所有字段都加入到 select 语句中"""
-        stmt = stmt.add_columns(getattr(model, model_field_name))
+        for k, v in params.items():
+            if "logic" not in v and "value" not in v:
+                """不包含 logic 和 value 的 value 需要继续遍历"""
+                if mappings is None or mappings[k] is None:
+                    raise KeyError(f"'{k}' is not in mappings")
+                else:
+                    add_where_clause(v, mappings[k])
 
-    for schema_field_name, schema_field_info in params.model_fields.items():
+            else:
+                field = getattr(model, k)
+                logic = v["logic"]
+                value = v["value"]
 
-        table_field = None
+                """将 where 条件添加到 select 语句中"""
+                if logic == AdvancedQueryLogic.LESS:
+                    stmt = stmt.where(field < value)
+                if logic == AdvancedQueryLogic.LESS_OR_EQUAL:
+                    stmt = stmt.where(field <= value)
+                if logic == AdvancedQueryLogic.EQUAL:
+                    stmt = stmt.where(field == value)
+                if logic == AdvancedQueryLogic.NOT_EQUAL:
+                    stmt = stmt.where(field != value)
+                if logic == AdvancedQueryLogic.GREATER_OR_EQUAL:
+                    stmt = stmt.where(field >= value)
+                if logic == AdvancedQueryLogic.GREATER:
+                    stmt = stmt.where(field > value)
+                if logic == AdvancedQueryLogic.IN:
+                    stmt = stmt.where(field.in_(value.split(",")))
+                if logic == AdvancedQueryLogic.NOT_IN:
+                    stmt = stmt.where(field.notin_(value.split(",")))
+                if logic == AdvancedQueryLogic.LIKE:
+                    stmt = stmt.where(field.like(f"%%{value}%%"))
+                if logic == AdvancedQueryLogic.NOT_LIKE:
+                    stmt = stmt.where(field.notlike(f"%%{value}%%"))
+                if logic == AdvancedQueryLogic.LEFT_LIKE:
+                    stmt = stmt.where(field.like(f"%%{value}"))
+                if logic == AdvancedQueryLogic.RIGHT_LIKE:
+                    stmt = stmt.where(field.like(f"{value}%%"))
+                else:
+                    pass
 
-        if schema_field_name not in model.model_fields.keys():
-            """将不在主表内的字段添加到 select 语句中（sort__字段除外，因为其是排序条件而不是查询条件。）"""
-            if schema_field_name == "sort__":
-                continue
-
-            """获取不在主表内的字段对应于主表的字段"""
-            try:
-                if not schema_field_info.json_schema_extra:
-                    raise ValueError(
-                        f"table_field not found in 'json_schema_extra' of '{schema_field_name}'"
-                    )
-
-                table_field = schema_field_info.json_schema_extra["table_field"]
-
-            except Exception as e:
-                raise e
-
-            stmt = stmt.add_columns(table_field)
-
-        if schema_field_name in not_none_params:
-            """将不为空的查询条件添加到 where 语句中"""
-            logic = not_none_params[schema_field_name]["logic"]
-            value = not_none_params[schema_field_name]["value"]
-
-            field_for_query: InstrumentedAttribute = getattr(model, field_name, None)
-
-            if not field_for_query:
-                field_for_query: InstrumentedAttribute = table_field
-
-            """将 where 条件添加到 select 语句中"""
-            if logic == AdvanceQueryLogic.LESS:
-                stmt = stmt.where(field_for_query < value)
-            if logic == AdvanceQueryLogic.LESS_OR_EQUAL:
-                stmt = stmt.where(field_for_query <= value)
-            if logic == AdvanceQueryLogic.EQUAL:
-                stmt = stmt.where(field_for_query == value)
-            if logic == AdvanceQueryLogic.NOT_EQUAL:
-                stmt = stmt.where(field_for_query != value)
-            if logic == AdvanceQueryLogic.GREATER_OR_EQUAL:
-                stmt = stmt.where(field_for_query >= value)
-            if logic == AdvanceQueryLogic.GREATER:
-                stmt = stmt.where(field_for_query > value)
-            if logic == AdvanceQueryLogic.IN:
-                stmt = stmt.where(field_for_query.in_(value.split(",")))
-            if logic == AdvanceQueryLogic.NOT_IN:
-                stmt = stmt.where(field_for_query.notin_(value.split(",")))
-            if logic == AdvanceQueryLogic.LIKE:
-                stmt = stmt.where(field_for_query.like(f"%%{value}%%"))
-            if logic == AdvanceQueryLogic.NOT_LIKE:
-                stmt = stmt.where(field_for_query.notlike(f"%%{value}%%"))
-            if logic == AdvanceQueryLogic.LEFT_LIKE:
-                stmt = stmt.where(field_for_query.like(f"%%{value}"))
-            if logic == AdvanceQueryLogic.RIGHT_LIKE:
-                stmt = stmt.where(field_for_query.like(f"{value}%%"))
-
+    add_where_clause(params.model_dump(exclude_none=True))
     return stmt

@@ -1,33 +1,45 @@
 from utils import as_advanced_query_and_sort_schema
 from common.response import ResponseBase
 from common.schema import DataSchemaBase
-from pydantic import BaseModel, Field
+from fastapi_pagination import Page
+from sqlmodel import SQLModel
 
 
-from ..bin_spec.model import BinSpec
-from ..warehouse_area.model import WarehouseArea
+from ..bin_spec.schema import BinSpec
+from ..warehouse_area.schema import WarehouseArea
+
+
+class BinSpecInBinInfo(BinSpec.select(include=["bin_spec_name"])):
+    pass
+
+
+class WarehouseAreaInBinInfo(WarehouseArea.select(include=["warehouse_area_name"])):
+    pass
 
 
 class BinInfo(DataSchemaBase):
     bin_code: str
-    bin_spec: BinSpec
-    warehouse_area: WarehouseArea
+    bin_spec: BinSpecInBinInfo
+    warehouse_area: WarehouseAreaInBinInfo
     row: int
     col: int
     level: int
 
 
 class Request:
-    class AddBinInfo(BaseModel):
+    class AddBinInfo(SQLModel):
         bin_code: str
-        bin_spec_name: str
-        warehouse_area_name: str
+        bin_spec_id: int
+        warehouse_area_id: int
         row: int
         col: int
         level: int
 
+    class DeleteBinInfo(SQLModel):
+        id: int
+
     @as_advanced_query_and_sort_schema()
-    class GetBinInfos(BinInfo):
+    class GetBinsInfo(BinInfo):
         pass
 
 
@@ -35,5 +47,8 @@ class Response:
     class AddBinInfo(ResponseBase[BinInfo]):
         pass
 
-    class GetBinInfos(ResponseBase[BinInfo]):
+    class DeleteBinInfo(ResponseBase[BinInfo]):
+        pass
+
+    class GetBinsInfo(ResponseBase[Page[BinInfo]]):
         pass
