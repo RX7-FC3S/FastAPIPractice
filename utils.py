@@ -58,11 +58,13 @@ class AdvancedQueryLogic(Enum):
     GREATER_OR_EQUAL = ">="
     GREATER = ">"
     IN = "@"
-    NOT_IN = "*"
+    NOT_IN = "!@"
     LIKE = "%"
     NOT_LIKE = "!%"
     LEFT_LIKE = "%_"
     RIGHT_LIKE = "_%"
+    IS_NULL = "_"
+    NOT_NULL = "!_"
 
 
 class AdvancedSortOrder(Enum):
@@ -143,7 +145,7 @@ def advanced_query_and_sort(
                     add_where_clause(v, mappings[k])
 
             else:
-                field = getattr(model, k)
+                field: InstrumentedAttribute = getattr(model, k)
                 logic = v["logic"]
                 value = v["value"]
 
@@ -172,6 +174,10 @@ def advanced_query_and_sort(
                     stmt = stmt.where(field.like(f"%%{value}"))
                 if logic == AdvancedQueryLogic.RIGHT_LIKE:
                     stmt = stmt.where(field.like(f"{value}%%"))
+                if logic == AdvancedQueryLogic.IS_NULL:
+                    stmt = stmt.where(field == None)
+                if logic == AdvancedQueryLogic.NOT_NULL:
+                    stmt = stmt.where(field != None)
                 else:
                     pass
 
