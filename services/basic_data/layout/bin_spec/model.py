@@ -1,5 +1,9 @@
-from common.model import DataModelBase, Field
-from sqlmodel import Relationship
+from sqlmodel import Field, Relationship
+from common.model import DataModelBase
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..bin_info.model import BinInfo
 
 
 class BinSpec(DataModelBase, table=True):

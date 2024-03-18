@@ -1,53 +1,12 @@
+from typing import Optional, TypeVar, Generic, Callable, cast, Any
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from typing import Optional, TypeVar, Generic, Callable
+from sqlmodel.main import FieldInfo, SQLModelMetaclass
 from sqlmodel.sql.expression import SelectOfScalar
 from pydantic import BaseModel, create_model
 from sqlmodel import SQLModel, select
-from sqlmodel.main import FieldInfo, SQLModelMetaclass
 from pydantic import BaseModel
 from datetime import datetime
-from copy import deepcopy
 from enum import Enum
-
-
-def schema_optionalize(
-    include: Optional[list[str]] = None,
-    exclude: Optional[list[str]] = None,
-):
-    """Return a decorator to make model fields optional"""
-
-    if exclude is None:
-        exclude = []
-
-    # Create the decorator
-    def decorator(cls: type[BaseModel]) -> type[BaseModel]:
-        new_field_definitions = {}
-        fields = cls.model_fields
-
-        if include is None:
-            fields = fields.items()
-        else:
-            # Create iterator for specified fields
-            fields = ((field_name, fields[field_name]) for field_name in include if field_name in fields)
-            # Fields in 'include' that are not in the model are simply ignored, as in BaseModel.dict
-        for field_name, field_info in fields:
-            if field_name in exclude or not field_info.is_required:
-                new_field_definitions[field_name] = (field_name, field_info)
-                continue
-            else:
-                # # Update pydantic ModelField to not required
-                assert field_info.annotation is not None
-                new_field_type = Optional[field_info.annotation]
-                field_info.default = None
-                new_field_info = deepcopy(field_info)
-                new_field_definitions[field_name] = (new_field_type, new_field_info)
-        return create_model(
-            f"Optional{cls.__name__}",
-            __base__=cls,
-            **new_field_definitions,
-        )
-
-    return decorator
 
 
 class AdvancedQueryLogic(Enum):
@@ -67,7 +26,7 @@ class AdvancedQueryLogic(Enum):
     NOT_NULL = "!_"
 
 
-class AdvancedSortOrder(Enum):
+class OrderDirection(Enum):
     ASCENDING = "<"
     DESCENDING = ">"
 
@@ -81,9 +40,9 @@ class AdvancedQueryField(BaseModel, Generic[FieldValueType]):
     value: FieldValueType
 
 
-class AdvancedSortField(BaseModel, Generic[FieldNameEnumType]):
+class AdvancedOrderField(BaseModel, Generic[FieldNameEnumType]):
     field: FieldNameEnumType
-    order: AdvancedSortOrder
+    order: OrderDirection
 
 
 def get_deepest_field_type(field_info) -> str:
@@ -93,18 +52,21 @@ def get_deepest_field_type(field_info) -> str:
     return field_type
 
 
-def create_advanced_query_and_sort_model(cls: type[SQLModel]) -> SQLModel:
+def create_advanced_query_and_order_model(cls: type[BaseModel]):
     """
-    this is used in the decorate function as_advanced_query_and_sort_schema to recurse the cls and make its fields be optional
+    this is used in the decorate function as_advanced_query_and_order_schema to recurse the cls and make its fields be optional
     if KeyError: '__qualname__' occurs, see https://github.com/pydantic/pydantic/issues/8633
     """
-    new_definition = {}
-    model_fields = cls.__pydantic_core_schema__["schema"]["fields"]  # type: ignore
-    for field_name, field_info in model_fields.items():  # type: ignore
+
+    new_definition: dict[str, tuple[Optional[Any], FieldInfo]] = {}
+    
+    model_fields: dict[str, dict] = cls.__pydantic_core_schema__["schema"]["fields"] # type: ignore
+
+    for field_name, field_info in model_fields.items():
         field_type = field_info["schema"]["type"]
         if field_type == "model":
             new_definition[field_name] = (
-                Optional[create_advanced_query_and_sort_model(field_info["schema"]["cls"])],  # type: ignore
+                Optional[create_advanced_query_and_order_model(field_info["schema"]["cls"])],
                 FieldInfo(default=None),
             )
         else:
@@ -112,18 +74,22 @@ def create_advanced_query_and_sort_model(cls: type[SQLModel]) -> SQLModel:
                 Optional[AdvancedQueryField[eval(get_deepest_field_type(field_info))]],
                 FieldInfo(default=None),
             )
-    return create_model(f"{cls.__name__}Optional", __base__=cls, **new_definition)
+    return create_model(f"{cls.__name__}ForQuery", __base__=None, **new_definition) # type: ignore
 
 
-def as_advanced_query_and_sort_schema() -> Callable[[type[SQLModel]], SQLModel]:
+def as_advanced_query_and_order_schema() -> Callable[[type[SQLModel]], SQLModel]:
     def wrapper(cls: type[SQLModel]) -> SQLModel:
-        return create_advanced_query_and_sort_model(cls)
-
+        model = create_advanced_query_and_order_model(cls)
+        order_by = {"order_by__": (Optional[list[type[type(Enum("FieldNameEnum", {i: i for i in model.model_fields.keys()}))]]], FieldInfo(default=None))}
+        
+        return create_model(f"{model.__name__}AndOrder", __base__=model, **order_by) # type: ignore
     return wrapper
 
 
-def advanced_query_and_sort(
-    master_model: SQLModelMetaclass, params: SQLModel, mappings: dict[str, SQLModelMetaclass] | None = None
+def advanced_query_and_order(
+    master_model: SQLModelMetaclass,
+    params: SQLModel,
+    mappings: dict[str, SQLModelMetaclass] | None = None,
 ) -> SelectOfScalar:
     stmt: SelectOfScalar = select(master_model)
 
@@ -138,12 +104,11 @@ def advanced_query_and_sort(
 
         for k, v in params.items():
             if "logic" not in v and "value" not in v:
-                """不包含 logic 和 value 的 value 需要继续遍历"""
+                # 如果 v 中没有 logic 和 value 则需要再次遍历
                 if mappings is None or mappings[k] is None:
                     raise KeyError(f"'{k}' is not in mappings")
                 else:
                     add_where_clause(v, mappings[k])
-
             else:
                 field: InstrumentedAttribute = getattr(model, k)
                 logic = v["logic"]

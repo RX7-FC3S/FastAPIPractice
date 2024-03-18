@@ -1,4 +1,4 @@
-from utils import as_advanced_query_and_sort_schema
+from utils import as_advanced_query_and_order_schema
 from common.response import ResponseBase
 from common.schema import DataSchemaBase
 from fastapi_pagination import Page
@@ -38,7 +38,7 @@ class Request:
     class DeleteBinInfo(SQLModel):
         id: int
 
-    @as_advanced_query_and_sort_schema()
+    @as_advanced_query_and_order_schema()
     class GetBinsInfo(BinInfo):
         pass
 

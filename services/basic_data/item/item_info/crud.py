@@ -1,5 +1,5 @@
 from common.crud import CRUDBase, Session
-from utils import advanced_query_and_sort
+from utils import advanced_query_and_order
 from sqlmodel import select
 
 from . import model
@@ -13,7 +13,7 @@ class CRUDItem(CRUDBase[model.ItemInfo]):
         return db.exec(stmt).all()
 
     def get_items(self, db: Session, params: schema.Request.GetItems):
-        stmt = advanced_query_and_sort(model.ItemInfo, params)
+        stmt = advanced_query_and_order(model.ItemInfo, params)
         return db.exec(stmt).all()
 
 

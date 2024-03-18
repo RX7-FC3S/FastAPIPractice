@@ -1,5 +1,5 @@
 from common.crud import CRUDBase, Session
-from utils import advanced_query_and_sort
+from utils import advanced_query_and_order
 from sqlmodel import select
 
 from . import model
@@ -13,7 +13,7 @@ class CRUDBinSpec(CRUDBase[model.BinSpec]):
         return db.exec(stmt).all()
 
     def get_bin_specs(self, db: Session, params: schema.Request.GetBinSpecs):
-        stmt = advanced_query_and_sort(model.BinSpec, params, {})
+        stmt = advanced_query_and_order(model.BinSpec, params, {})
         return db.exec(stmt).all()
 
     def get_bin_specs_id_and_name(self, db: Session):

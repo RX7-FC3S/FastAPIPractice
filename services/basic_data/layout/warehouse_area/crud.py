@@ -1,5 +1,5 @@
 from common.crud import CRUDBase, Session
-from utils import advanced_query_and_sort
+from utils import advanced_query_and_order
 from sqlmodel import select
 
 from . import model
@@ -13,7 +13,7 @@ class CRUDWarehouseArea(CRUDBase[model.WarehouseArea]):
         return db.exec(stmt).all()
 
     def get_warehouse_areas(self, db: Session, params: schema.Request.GetWarehouseAreas):
-        stmt = advanced_query_and_sort(model.WarehouseArea, params, {})
+        stmt = advanced_query_and_order(model.WarehouseArea, params, {})
         return db.exec(stmt).all()
 
     def get_warehouse_areas_id_and_name(self, db: Session):
