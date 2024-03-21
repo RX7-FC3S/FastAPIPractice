@@ -59,8 +59,8 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
     """
 
     new_definition: dict[str, tuple[Optional[Any], FieldInfo]] = {}
-    
-    model_fields: dict[str, dict] = cls.__pydantic_core_schema__["schema"]["fields"] # type: ignore
+
+    model_fields: dict[str, dict] = cls.__pydantic_core_schema__["schema"]["fields"]  # type: ignore
 
     for field_name, field_info in model_fields.items():
         field_type = field_info["schema"]["type"]
@@ -74,15 +74,24 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
                 Optional[AdvancedQueryField[eval(get_deepest_field_type(field_info))]],
                 FieldInfo(default=None),
             )
-    return create_model(f"{cls.__name__}ForQuery", __base__=None, **new_definition) # type: ignore
+    return create_model(f"{cls.__name__}ForQuery", __base__=None, **new_definition)  # type: ignore
 
 
 def as_advanced_query_and_order_schema() -> Callable[[type[SQLModel]], SQLModel]:
     def wrapper(cls: type[SQLModel]) -> SQLModel:
         model = create_advanced_query_and_order_model(cls)
-        order_by = {"order_by__": (Optional[list[type[type(Enum("FieldNameEnum", {i: i for i in model.model_fields.keys()}))]]], FieldInfo(default=None))}
-        
-        return create_model(f"{model.__name__}AndOrder", __base__=model, **order_by) # type: ignore
+
+        FieldNameEnum = type(Enum("FieldNameEnum", {i: i for i in model.model_fields.keys()}))
+
+        order_by = {
+            "order_by__": (
+                Optional[list[AdvancedOrderField[type[FieldNameEnum]]]],  # type: ignore
+                FieldInfo(default=None),
+            )
+        }
+
+        return create_model(f"{model.__name__}AndOrder", __base__=model, **order_by)  # type: ignore
+
     return wrapper
 
 
