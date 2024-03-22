@@ -1,4 +1,5 @@
 from fastapi_pagination import Params as PaginationParams, paginate
+from common.schema import AdvancedOrderField
 from database import Session, create_session
 from fastapi import APIRouter, Depends
 from common.response import Response
@@ -27,9 +28,12 @@ async def add_item(params: schema.Request.AddItem, db: Session = Depends(create_
 
 @router.post("/get_items", response_model=schema.Response.GetItems)
 async def get_items(
-    query_params: schema.Request.GetItems, pagination_params: PaginationParams, db: Session = Depends(create_session)
+    query_params: schema.Request.GetItems,
+    order_params: list[AdvancedOrderField],
+    pagination_params: PaginationParams,
+    db: Session = Depends(create_session),
 ):
     try:
-        return Response(True, "", paginate(crud.crud_item.get_items(db, query_params), pagination_params))
+        return Response(True, "", paginate(crud.crud_item.get_items(db, query_params, order_params), pagination_params))
     except Exception as e:
         return Response(False, str(e), None)

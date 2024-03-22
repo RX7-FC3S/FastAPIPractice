@@ -1,48 +1,12 @@
-from typing import Optional, TypeVar, Generic, Callable, cast, Any
+from common.schema import AdvancedQueryLogic, AdvancedQueryField, AdvancedOrderField
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.main import FieldInfo, SQLModelMetaclass
 from sqlmodel.sql.expression import SelectOfScalar
 from pydantic import BaseModel, create_model
+from typing import Optional, Callable, Any
 from sqlmodel import SQLModel, select
 from pydantic import BaseModel
 from datetime import datetime
-from enum import Enum
-
-
-class AdvancedQueryLogic(Enum):
-    LESS = "<"
-    LESS_OR_EQUAL = "<="
-    EQUAL = "="
-    NOT_EQUAL = "!="
-    GREATER_OR_EQUAL = ">="
-    GREATER = ">"
-    IN = "@"
-    NOT_IN = "!@"
-    LIKE = "%"
-    NOT_LIKE = "!%"
-    LEFT_LIKE = "%_"
-    RIGHT_LIKE = "_%"
-    IS_NULL = "_"
-    NOT_NULL = "!_"
-
-
-class OrderDirection(Enum):
-    ASCENDING = "<"
-    DESCENDING = ">"
-
-
-FieldValueType = TypeVar("FieldValueType")
-FieldNameEnumType = TypeVar("FieldNameEnumType", bound=Enum)
-
-
-class AdvancedQueryField(BaseModel, Generic[FieldValueType]):
-    logic: AdvancedQueryLogic
-    value: FieldValueType
-
-
-class AdvancedOrderField(BaseModel, Generic[FieldNameEnumType]):
-    field: FieldNameEnumType
-    order: OrderDirection
 
 
 def get_deepest_field_type(field_info) -> str:
@@ -79,25 +43,15 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
 
 def as_advanced_query_and_order_schema() -> Callable[[type[SQLModel]], SQLModel]:
     def wrapper(cls: type[SQLModel]) -> SQLModel:
-        model = create_advanced_query_and_order_model(cls)
-
-        FieldNameEnum = type(Enum("FieldNameEnum", {i: i for i in model.model_fields.keys()}))
-
-        order_by = {
-            "order_by__": (
-                Optional[list[AdvancedOrderField[type[FieldNameEnum]]]],  # type: ignore
-                FieldInfo(default=None),
-            )
-        }
-
-        return create_model(f"{model.__name__}AndOrder", __base__=model, **order_by)  # type: ignore
+        return create_advanced_query_and_order_model(cls)
 
     return wrapper
 
 
 def advanced_query_and_order(
     master_model: SQLModelMetaclass,
-    params: SQLModel,
+    query_params: SQLModel,
+    order_params: list[AdvancedOrderField],
     mappings: dict[str, SQLModelMetaclass] | None = None,
 ) -> SelectOfScalar:
     stmt: SelectOfScalar = select(master_model)
@@ -155,5 +109,9 @@ def advanced_query_and_order(
                 else:
                     pass
 
-    add_where_clause(params.model_dump(exclude_none=True))
+    add_where_clause(query_params.model_dump(exclude_none=True))
+
+    for order_condition in order_params:
+        stmt = stmt.order_by(getattr(master_model, order_condition.field))
+
     return stmt

@@ -1,6 +1,8 @@
+from typing import TypeVar, Generic
 from pydantic import create_model
 from sqlmodel import SQLModel
 from datetime import datetime
+from enum import Enum
 
 
 class DataSchemaBase(SQLModel):
@@ -43,3 +45,38 @@ class DataSchemaBase(SQLModel):
                 new_definition[field_name] = (field_info.annotation, field_info)
 
         return create_model(f"{cls.__name__}Selected", __base__=SQLModel, **new_definition)
+
+
+class AdvancedQueryLogic(Enum):
+    LESS = "<"
+    LESS_OR_EQUAL = "<="
+    EQUAL = "="
+    NOT_EQUAL = "!="
+    GREATER_OR_EQUAL = ">="
+    GREATER = ">"
+    IN = "@"
+    NOT_IN = "!@"
+    LIKE = "%"
+    NOT_LIKE = "!%"
+    LEFT_LIKE = "%_"
+    RIGHT_LIKE = "_%"
+    IS_NULL = "_"
+    NOT_NULL = "!_"
+
+
+class OrderDirection(Enum):
+    ASCENDING = "<"
+    DESCENDING = ">"
+
+
+FieldValueType = TypeVar("FieldValueType")
+
+
+class AdvancedQueryField(SQLModel, Generic[FieldValueType]):
+    logic: AdvancedQueryLogic
+    value: FieldValueType
+
+
+class AdvancedOrderField(SQLModel):
+    field: str
+    order: OrderDirection

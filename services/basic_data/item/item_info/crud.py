@@ -1,3 +1,4 @@
+from common.schema import AdvancedOrderField
 from common.crud import CRUDBase, Session
 from utils import advanced_query_and_order
 from sqlmodel import select
@@ -12,8 +13,8 @@ class CRUDItem(CRUDBase[model.ItemInfo]):
         stmt = select(model.ItemInfo).where(model.ItemInfo.item_code == item_code)
         return db.exec(stmt).all()
 
-    def get_items(self, db: Session, params: schema.Request.GetItems):
-        stmt = advanced_query_and_order(model.ItemInfo, params)
+    def get_items(self, db: Session, query_params: schema.Request.GetItems, order_params: list[AdvancedOrderField]):
+        stmt = advanced_query_and_order(model.ItemInfo, query_params, order_params)
         return db.exec(stmt).all()
 
 
