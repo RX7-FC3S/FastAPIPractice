@@ -1,4 +1,4 @@
-from common.schema import AdvancedQueryLogic, AdvancedQueryField, AdvancedOrderField
+from common.schema import AdvancedQueryLogic, AdvancedQueryField, AdvancedOrderField, OrderDirection
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.main import FieldInfo, SQLModelMetaclass
 from sqlmodel.sql.expression import SelectOfScalar
@@ -112,6 +112,9 @@ def advanced_query_and_order(
     add_where_clause(query_params.model_dump(exclude_none=True))
 
     for order_condition in order_params:
-        stmt = stmt.order_by(getattr(master_model, order_condition.field))
+        if order_condition.order == OrderDirection.ASCENDING:
+            stmt = stmt.order_by(getattr(master_model, order_condition.field))
+        else:
+            stmt = stmt.order_by(getattr(master_model, order_condition.field).desc())
 
     return stmt
