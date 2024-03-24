@@ -1,5 +1,6 @@
-from common.crud import CRUDBase, Session
+from common.schema import AdvancedOrderField
 from utils import advanced_query_and_order
+from common.crud import CRUDBase, Session
 from sqlmodel import select
 
 from . import model
@@ -20,11 +21,14 @@ class CRUDBinInfo(CRUDBase[model.BinInfo]):
         )
         return db.exec(stmt).all()
 
-    def get_bins_info(self, db: Session, params: schema.Request.GetBinsInfo):
+    def get_bins_info(
+        self, db: Session, query_params: schema.Request.GetBinsInfo, order_params: list[AdvancedOrderField]
+    ):
 
         stmt = advanced_query_and_order(
             model.BinInfo,
-            params,
+            query_params,
+            order_params,
             {
                 "bin_spec": BinSpec,
                 "warehouse_area": WarehouseArea,

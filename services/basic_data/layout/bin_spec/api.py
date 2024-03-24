@@ -1,4 +1,5 @@
 from fastapi_pagination import Params as PaginationParams, paginate
+from common.schema import AdvancedOrderField
 from database import Session, create_session
 from fastapi import APIRouter, Depends
 from common.response import Response
@@ -27,10 +28,15 @@ async def add_bin_spec(params: schema.Request.AddBinSpec, db: Session = Depends(
 
 @router.post("/get_bin_specs", response_model=schema.Response.GetBinSpecs, tags=["库位规格", "查"])
 async def get_bin_specs(
-    query_params: schema.Request.GetBinSpecs, pagination_params: PaginationParams, db: Session = Depends(create_session)
+    query_params: schema.Request.GetBinSpecs,
+    order_params: list[AdvancedOrderField],
+    pagination_params: PaginationParams,
+    db: Session = Depends(create_session),
 ):
     try:
-        return Response(True, "", paginate(crud.crud_bin_spec.get_bin_specs(db, query_params), pagination_params))
+        return Response(
+            True, "", paginate(crud.crud_bin_spec.get_bin_specs(db, query_params, order_params), pagination_params)
+        )
     except Exception as e:
         return Response(False, str(e), None)
 

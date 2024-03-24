@@ -1,5 +1,6 @@
-from common.crud import CRUDBase, Session
+from common.schema import AdvancedOrderField
 from utils import advanced_query_and_order
+from common.crud import CRUDBase, Session
 from sqlmodel import select
 
 from . import model
@@ -12,8 +13,10 @@ class CRUDBinSpec(CRUDBase[model.BinSpec]):
         stmt = select(model.BinSpec).where(model.BinSpec.bin_spec_name == bin_spec_name)
         return db.exec(stmt).all()
 
-    def get_bin_specs(self, db: Session, params: schema.Request.GetBinSpecs):
-        stmt = advanced_query_and_order(model.BinSpec, params, {})
+    def get_bin_specs(
+        self, db: Session, query_params: schema.Request.GetBinSpecs, order_params: list[AdvancedOrderField]
+    ):
+        stmt = advanced_query_and_order(model.BinSpec, query_params, order_params, {})
         return db.exec(stmt).all()
 
     def get_bin_specs_id_and_name(self, db: Session):

@@ -1,4 +1,5 @@
 from fastapi_pagination import Params as PaginationParams, paginate
+from common.schema import AdvancedOrderField
 from database import Session, create_session
 from fastapi import APIRouter, Depends
 from common.response import Response
@@ -52,7 +53,10 @@ def delete_bin_info(params: schema.Request.DeleteBinInfo, db: Session = Depends(
 @router.post("/get_bins_info", response_model=schema.Response.GetBinsInfo, tags=["库位信息", "查"])
 async def get_bins_info(
     query_params: schema.Request.GetBinsInfo,
+    order_params: list[AdvancedOrderField],
     pagination_params: PaginationParams,
     db: Session = Depends(create_session),
 ):
-    return Response(True, "", paginate(crud.crud_bin_info.get_bins_info(db, query_params), pagination_params))
+    return Response(
+        True, "", paginate(crud.crud_bin_info.get_bins_info(db, query_params, order_params), pagination_params)
+    )

@@ -112,9 +112,21 @@ def advanced_query_and_order(
     add_where_clause(query_params.model_dump(exclude_none=True))
 
     for order_condition in order_params:
-        if order_condition.order == OrderDirection.ASCENDING:
-            stmt = stmt.order_by(getattr(master_model, order_condition.field))
+
+        model_field: InstrumentedAttribute
+
+        if "." not in order_condition.field:
+            model_field = getattr(master_model, order_condition.field)
         else:
-            stmt = stmt.order_by(getattr(master_model, order_condition.field).desc())
+            model_name, field_name = order_condition.field.split(".")
+            if mappings is None or mappings[model_name] is None:
+                raise KeyError(f"'{model_name}' is not in mappings")
+            else:
+                model_field = getattr(mappings[model_name], field_name)
+
+        if order_condition.order == OrderDirection.ASCENDING:
+            stmt = stmt.order_by(model_field)
+        else:
+            stmt = stmt.order_by(model_field.desc())
 
     return stmt
