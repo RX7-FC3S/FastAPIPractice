@@ -17,6 +17,9 @@ class Stakeholder(DataSchemaBase):
     address: str
     country: str
 
+    is_sender: bool
+    is_receiver: bool
+
 
 
 class Request:

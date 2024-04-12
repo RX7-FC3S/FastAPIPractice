@@ -1,4 +1,5 @@
 from fastapi_pagination import Params as PaginationParams, paginate
+from common.schema import AdvancedOrderField
 from database import Session, create_session
 from fastapi import APIRouter, Depends
 from common.response import Response
@@ -26,12 +27,13 @@ def add_warehouse_area(params: schema.Request.AddWarehouseArea, db: Session = De
 @router.post("/get_warehouse_areas", response_model=schema.Response.GetWarehouseAreas, tags=["库区", "查"])
 def get_warehouse_areas(
     query_params: schema.Request.GetWarehouseAreas,
+    order_params: list[AdvancedOrderField],
     pagination_params: PaginationParams,
     db: Session = Depends(create_session),
 ):
     try:
         return Response(
-            True, "", paginate(crud.crud_warehouse_area.get_warehouse_areas(db, query_params), pagination_params)
+            True, "", paginate(crud.crud_warehouse_area.get_warehouse_areas(db, query_params, order_params), pagination_params)
         )
     except Exception as e:
         return Response(False, str(e), None)
