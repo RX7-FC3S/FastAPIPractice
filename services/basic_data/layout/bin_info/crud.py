@@ -15,21 +15,28 @@ class CRUDBinInfo(CRUDBase[model.BinInfo]):
         stmt = select(model.BinInfo).where(model.BinInfo.bin_code == bin_code)
         return db.exec(stmt).all()
 
-    def get_bin_info_by_row_col_and_level(self, db: Session, row: int, col: int, level: int):
+    def get_bin_info_by_row_col_and_level(
+        self, db: Session, row: int, col: int, level: int
+    ):
         stmt = select(model.BinInfo).where(
-            model.BinInfo.row == row, model.BinInfo.col == col, model.BinInfo.level == level
+            model.BinInfo.row == row,
+            model.BinInfo.col == col,
+            model.BinInfo.level == level,
         )
         return db.exec(stmt).all()
 
     def get_bins_info(
-        self, db: Session, query_params: schema.Request.GetBinsInfo, order_params: list[AdvancedOrderField]
+        self,
+        db: Session,
+        query_params: schema.Request.GetBinsInfo,
+        order_params: list[AdvancedOrderField],
     ):
 
         stmt = advanced_query_and_order(
             model.BinInfo,
             query_params,
             order_params,
-            {
+            mappings={
                 "bin_spec": BinSpec,
                 "warehouse_area": WarehouseArea,
             },

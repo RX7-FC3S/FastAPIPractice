@@ -38,6 +38,11 @@ from services.basic_data.item.item_info.api import router as router_item_info
 
 app.include_router(router_item_info)
 
+# - 入库管理
+# -- 入库订单
+# --- 入库订单头
+from services.inbound.inbound_order.inbound_order_header.api import router as router_inbound_order_header
+app.include_router(router_inbound_order_header)
 
 disable_installed_extensions_check()
 

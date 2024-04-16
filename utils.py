@@ -1,9 +1,9 @@
 from common.schema import AdvancedQueryLogic, AdvancedQueryField, AdvancedOrderField, OrderDirection
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlmodel.sql.expression import Select , SelectOfScalar
 from sqlmodel.main import FieldInfo, SQLModelMetaclass
-from sqlmodel.sql.expression import SelectOfScalar
 from pydantic import BaseModel, create_model
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, overload
 from sqlmodel import SQLModel, select
 from pydantic import BaseModel
 from datetime import datetime
@@ -23,7 +23,7 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
     """
 
     new_definition: dict[str, tuple[Optional[Any], FieldInfo]] = {}
-
+    
     model_fields: dict[str, dict] = cls.__pydantic_core_schema__["schema"]["fields"]  # type: ignore
 
     for field_name, field_info in model_fields.items():
@@ -52,9 +52,13 @@ def advanced_query_and_order(
     master_model: SQLModelMetaclass,
     query_params: SQLModel,
     order_params: list[AdvancedOrderField],
+    statement: Select | SelectOfScalar | None = None,
     mappings: dict[str, SQLModelMetaclass] | None = None,
-) -> SelectOfScalar:
-    stmt: SelectOfScalar = select(master_model)
+) -> Select | SelectOfScalar:
+    if statement is None:
+        stmt: Select | SelectOfScalar = select(master_model)
+    else:
+        stmt = statement
 
     if mappings is not None:
         for _, join_model in mappings.items():
