@@ -14,9 +14,12 @@ class CRUDBinSpec(CRUDBase[model.BinSpec]):
         return db.exec(stmt).all()
 
     def get_bin_specs(
-        self, db: Session, query_params: schema.Request.GetBinSpecs, order_params: list[AdvancedOrderField]
+        self,
+        db: Session,
+        query_params: schema.Request.GetBinSpecs,
+        order_params: list[AdvancedOrderField],
     ):
-        stmt = advanced_query_and_order(model.BinSpec, query_params, order_params, {})
+        stmt = advanced_query_and_order(model.BinSpec, query_params, order_params)
         return db.exec(stmt).all()
 
     def get_bin_specs_id_and_name(self, db: Session):
