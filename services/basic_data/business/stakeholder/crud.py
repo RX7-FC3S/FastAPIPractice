@@ -9,7 +9,7 @@ from . import schema
 
 class CRUDStakeholder(CRUDBase[model.Stakeholder]):
     def get_stakeholders(self, db:Session,query_params: schema.Request.GetStakeholders, order_params: list[AdvancedOrderField]):
-        stmt = advanced_query_and_order(model.Stakeholder, query_params, order_params)
-        return db.exec(stmt).all()
+        stmt = advanced_query_and_order(model.Stakeholder, query_params, order_params)    
+        return db.exec(stmt).all() 
 
 crud_stakeholder = CRUDStakeholder(model.Stakeholder)

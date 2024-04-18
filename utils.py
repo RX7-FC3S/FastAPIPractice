@@ -34,8 +34,10 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
                 FieldInfo(default=None),
             )
         else:
+            print(field_name, field_info)
             new_definition[field_name] = (
-                Optional[AdvancedQueryField[eval(get_deepest_field_type(field_info))]],
+                Optional[AdvancedQueryField[
+                    eval(get_deepest_field_type(field_info))]] if field_info['schema']['type'] in ['str', 'int', 'float', 'bool', 'datetime'] else field_info['schema']['strict_schema']['python_schema']['cls'],
                 FieldInfo(default=None),
             )
     return create_model(f"{cls.__name__}ForQuery", __base__=None, **new_definition)  # type: ignore
