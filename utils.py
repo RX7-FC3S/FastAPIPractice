@@ -35,21 +35,15 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
         field_type = field_info["schema"]["type"]
         if field_type == "model":
             new_definition[field_name] = (
-                Optional[
-                    create_advanced_query_and_order_model(field_info["schema"]["cls"])
-                ],
+                Optional[create_advanced_query_and_order_model(field_info["schema"]["cls"])],
                 FieldInfo(default=None),
             )
         else:
+            # if field_info["schema"]["type"] in ["str", "int", "float", "bool", "datetime"]:
+            #     print(field_name, field_info)
+
             new_definition[field_name] = (
-                (
-                    Optional[
-                        AdvancedQueryField[eval(get_deepest_field_type(field_info))]
-                    ]
-                    if field_info["schema"]["type"]
-                    in ["str", "int", "float", "bool", "datetime"]
-                    else field_info["schema"]["strict_schema"]["python_schema"]["cls"]
-                ),
+                (Optional[AdvancedQueryField[eval(get_deepest_field_type(field_info))]]),
                 FieldInfo(default=None),
             )
     return create_model(f"{cls.__name__}ForQuery", __base__=None, **new_definition)  # type: ignore
