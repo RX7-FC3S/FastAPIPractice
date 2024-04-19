@@ -1,6 +1,11 @@
-from common.schema import AdvancedQueryLogic, AdvancedQueryField, AdvancedOrderField, OrderDirection
+from common.schema import (
+    AdvancedQueryLogic,
+    AdvancedQueryField,
+    AdvancedOrderField,
+    OrderDirection,
+)
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlmodel.sql.expression import Select , SelectOfScalar
+from sqlmodel.sql.expression import Select, SelectOfScalar
 from sqlmodel.main import FieldInfo, SQLModelMetaclass
 from pydantic import BaseModel, create_model
 from typing import Optional, Callable, Any, overload
@@ -23,21 +28,28 @@ def create_advanced_query_and_order_model(cls: type[BaseModel]):
     """
 
     new_definition: dict[str, tuple[Optional[Any], FieldInfo]] = {}
-    
+
     model_fields: dict[str, dict] = cls.__pydantic_core_schema__["schema"]["fields"]  # type: ignore
 
     for field_name, field_info in model_fields.items():
         field_type = field_info["schema"]["type"]
         if field_type == "model":
             new_definition[field_name] = (
-                Optional[create_advanced_query_and_order_model(field_info["schema"]["cls"])],
+                Optional[
+                    create_advanced_query_and_order_model(field_info["schema"]["cls"])
+                ],
                 FieldInfo(default=None),
             )
         else:
-            print(field_name, field_info)
             new_definition[field_name] = (
-                Optional[AdvancedQueryField[
-                    eval(get_deepest_field_type(field_info))]] if field_info['schema']['type'] in ['str', 'int', 'float', 'bool', 'datetime'] else field_info['schema']['strict_schema']['python_schema']['cls'],
+                (
+                    Optional[
+                        AdvancedQueryField[eval(get_deepest_field_type(field_info))]
+                    ]
+                    if field_info["schema"]["type"]
+                    in ["str", "int", "float", "bool", "datetime"]
+                    else field_info["schema"]["strict_schema"]["python_schema"]["cls"]
+                ),
                 FieldInfo(default=None),
             )
     return create_model(f"{cls.__name__}ForQuery", __base__=None, **new_definition)  # type: ignore
