@@ -20,6 +20,7 @@ app = FastAPI(lifespan=lifespan)
 # -- 业务信息
 from services.basic_data.business.order_type.api import router as router_order_type
 from services.basic_data.business.stakeholder.api import router as router_stakeholder
+
 app.include_router(router_order_type)
 app.include_router(router_stakeholder)
 
@@ -38,10 +39,16 @@ from services.basic_data.item.item_info.api import router as router_item_info
 
 app.include_router(router_item_info)
 
+# -- 物料单位
+from services.basic_data.item.item_unit.api import router as router_item_unit
+
+app.include_router(router_item_unit)
+
 # - 入库管理
 # -- 入库订单
 # --- 入库订单头
 from services.inbound.inbound_order.inbound_order_header.api import router as router_inbound_order_header
+
 app.include_router(router_inbound_order_header)
 
 disable_installed_extensions_check()
