@@ -8,7 +8,6 @@ from . import schema
 from . import model
 from . import crud
 
-
 router = APIRouter()
 
 
@@ -17,8 +16,8 @@ def add_item_unit(params: schema.Request.AddItemUnit, db: Session = Depends(crea
     return crud.crud_item_unit.add(db, model.ItemUint(**params.model_dump()))
 
 
-@router.get("/get_item_units_by_item_code", response_model=schema.Response.GetItemUnitsByItemCode)
-def get_item_units_by_item_code(
-    params: schema.Request.GetItemUnitsByItemCode = Depends(), db: Session = Depends(create_session)
+@router.get("/get_item_units_by_item_id", response_model=schema.Response.GetItemUnitsByItemId)
+def get_item_units_by_item_id(
+        params: schema.Request.GetItemUnitsByItemId = Depends(), db: Session = Depends(create_session)
 ):
-    return Response(True, "", crud.crud_item_unit.get_item_units_by_item_code(db, params.item_code))
+    return Response(True, "", crud.crud_item_unit.get_item_units_by_item_id(db, params.item_id))

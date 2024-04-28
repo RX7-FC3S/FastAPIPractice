@@ -4,13 +4,11 @@ from common.crud import CRUDBase, Session
 from sqlmodel import select
 
 from . import model
-from . import schema
-from services.basic_data.item.item_info.model import ItemInfo
 
 
 class CRUDItemUnit(CRUDBase[model.ItemUint]):
-    def get_item_units_by_item_code(self, db: Session, item_code: str):
-        stmt = select(model.ItemUint).join(ItemInfo).where(ItemInfo.item_code == item_code)
+    def get_item_units_by_item_id(self, db: Session, item_id: int):
+        stmt = select(self.model).where(self.model.item_id == item_id)
         return db.exec(stmt).all()
 
 

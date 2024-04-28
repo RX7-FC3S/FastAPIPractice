@@ -2,6 +2,7 @@ from utils import as_advanced_query_and_order_schema
 from common.response import ResponseBase
 from common.schema import DataSchemaBase
 from fastapi_pagination import Page
+from sqlmodel import SQLModel
 
 
 class OrderType(DataSchemaBase):
@@ -18,10 +19,16 @@ class Request:
     class GetOrderTypes(OrderType):
         pass
 
+    class GetOrderTypesByBusinessType(SQLModel):
+        business_type: int
+
 
 class Response:
     class AddOrderType(ResponseBase[OrderType]):
         pass
 
     class GetOrderTypes(ResponseBase[Page[OrderType]]):
+        pass
+
+    class GetOrderTypesByBusinessType(ResponseBase[list[OrderType]]):
         pass

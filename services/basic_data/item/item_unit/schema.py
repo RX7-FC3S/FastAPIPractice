@@ -21,13 +21,13 @@ class Request:
         unit_name: str
         conversion_quantity: int
 
-    class GetItemUnitsByItemCode(SQLModel):
-        item_code: str
+    class GetItemUnitsByItemId(SQLModel):
+        item_id: int
 
 
 class Response:
     class AddItemUnit(ItemUnit):
         pass
 
-    class GetItemUnitsByItemCode(ResponseBase[list[ItemUnit]]):
+    class GetItemUnitsByItemId(ResponseBase[list[ItemUnit]]):
         pass
