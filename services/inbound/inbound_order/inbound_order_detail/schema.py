@@ -6,25 +6,32 @@ from sqlmodel import SQLModel
 from typing import Optional, TYPE_CHECKING
 
 
-
 from . import model
 
-if TYPE_CHECKING:
-    from services.basic_data.item.item_info.schema import ItemInfo
-    from ..inbound_order_header.schema import InboundOrderHeader    
+from services.basic_data.item.item_info.schema import ItemInfo
+from services.inbound.inbound_order.inbound_order_header.schema import InboundOrderHeader
+
 
 class InboundOrderDetail(DataSchemaBase):
-    inbound_order_header: 'InboundOrderHeader'
+    inbound_order_header: "InboundOrderHeader"
     seq: int
-    item: 'ItemInfo'
+    item: "ItemInfo"
 
-    quantity_of_base_unit: int
+    quantity_of_pieces: int
     quantity_of_carton: Optional[int] = None
     quantity_of_pallet: Optional[int] = None
 
 
 class Request:
-    pass
+    class AddInboundOrderDetail(SQLModel):
+        inbound_order_header_id: int
+        seq: int
+        item_id: int
+        quantity_of_pieces: int
+        quantity_of_carton: Optional[int] = None
+        quantity_of_pallet: Optional[int] = None
+
 
 class Response:
-    pass
+    class AddInboundOrderDetail(ResponseBase[InboundOrderDetail]):
+        pass

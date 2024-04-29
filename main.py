@@ -51,6 +51,11 @@ from services.inbound.inbound_order.inbound_order_header.api import router as ro
 
 app.include_router(router_inbound_order_header)
 
+# --- 入库订单明细
+from services.inbound.inbound_order.inbound_order_detail.api import router as router_inbound_order_detail
+
+app.include_router(router_inbound_order_detail)
+
 disable_installed_extensions_check()
 
 if __name__ == "__main__":

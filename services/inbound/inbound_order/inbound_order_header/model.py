@@ -1,9 +1,13 @@
-from common.model import DataModelBase, Field
-from sqlmodel import Relationship
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+from sqlmodel import Field, Relationship
+from common.model import DataModelBase
+
 
 from services.basic_data.business.order_type.model import OrderType
 from services.basic_data.business.stakeholder.model import Stakeholder
+
+if TYPE_CHECKING:
+    from services.inbound.inbound_order.inbound_order_detail.model import InboundOrderDetail
 
 
 class InboundOrderHeader(DataModelBase, table=True):
@@ -17,12 +21,10 @@ class InboundOrderHeader(DataModelBase, table=True):
     sender_id: int = Field(nullable=False, foreign_key="stakeholder.id")
     sender: Stakeholder = Relationship(
         sa_relationship_kwargs={
-            'foreign_keys': '[InboundOrderHeader.sender_id]',
+            "foreign_keys": "[InboundOrderHeader.sender_id]",
         }
     )
     receiver_id: int = Field(nullable=False, foreign_key="stakeholder.id")
-    receiver: Stakeholder = Relationship(
-        sa_relationship_kwargs={
-            'foreign_keys': '[InboundOrderHeader.receiver_id]'
-        }
-    )
+    receiver: Stakeholder = Relationship(sa_relationship_kwargs={"foreign_keys": "[InboundOrderHeader.receiver_id]"})
+
+    inbound_order_details: "InboundOrderDetail" = Relationship()

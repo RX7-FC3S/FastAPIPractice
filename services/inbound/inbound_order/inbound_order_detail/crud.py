@@ -7,7 +7,8 @@ from . import model
 from . import schema
 
 
-class CRUDXxxx(CRUDBase):
+class CRUDInboundOrderDetail(CRUDBase[model.InboundOrderDetail]):
     pass
 
-crud_item = CRUDXxxx(model.Xxxx)
+
+crud_inbound_order_detail = CRUDInboundOrderDetail(model.InboundOrderDetail)
