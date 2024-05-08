@@ -17,26 +17,15 @@ router = APIRouter()
     response_model=schema.Response.AddInboundOrderHeader,
     tags=["增", "入库订单"],
 )
-def add_inbound_order_header(
-    params: schema.Request.AddInboundOrderHeader, db: Session = Depends(create_session)
-):
+def add_inbound_order_header(params: schema.Request.AddInboundOrderHeader, db: Session = Depends(create_session)):
     try:
-        db_inbound_order_header = (
-            crud.crud_inbound_order_header.get_by_inbound_order_number(
-                db, params.inbound_order_number
-            )
+        db_inbound_order_header = crud.crud_inbound_order_header.get_by_inbound_order_number(
+            db, params.inbound_order_number
         )
         if db_inbound_order_header:
-            return Response(
-                False, "Inbound order header already exists", db_inbound_order_header
-            )
-
+            return Response(False, f"入库订单号({params.inbound_order_number})已被使用", db_inbound_order_header[0])
         return Response(
-            True,
-            "",
-            crud.crud_inbound_order_header.add(
-                db, model.InboundOrderHeader(**params.model_dump())
-            ),
+            True, "", crud.crud_inbound_order_header.add(db, model.InboundOrderHeader(**params.model_dump()))
         )
 
     except Exception as e:
@@ -59,9 +48,7 @@ def get_inbound_order_headers(
             True,
             "",
             paginate(
-                crud.crud_inbound_order_header.get_inbound_order_headers(
-                    db, query_params, order_params
-                ),
+                crud.crud_inbound_order_header.get_inbound_order_headers(db, query_params, order_params),
                 pagination_params,
             ),
         )
