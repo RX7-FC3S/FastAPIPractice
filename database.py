@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, create_engine, Session
 
 DATABASE_URL = "sqlite:///sqlite.db"
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=False)
 
 
 def create_all_tables():

@@ -45,7 +45,7 @@ class Request:
 
 
 class Response:
-    class AddInboundOrderHeader(ResponseBase[InboundOrderHeader]):
+    class AddInboundOrderHeader(ResponseBase[Request.AddInboundOrderHeader]):
         pass
 
     class GetInboundOrderHeaders(ResponseBase[Page[InboundOrderHeader]]):

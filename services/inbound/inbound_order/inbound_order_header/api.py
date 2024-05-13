@@ -24,9 +24,10 @@ def add_inbound_order_header(params: schema.Request.AddInboundOrderHeader, db: S
         )
         if db_inbound_order_header:
             return Response(False, f"入库订单号({params.inbound_order_number})已被使用", db_inbound_order_header[0])
-        return Response(
-            True, "", crud.crud_inbound_order_header.add(db, model.InboundOrderHeader(**params.model_dump()))
-        )
+
+        res = crud.crud_inbound_order_header.add(db, model.InboundOrderHeader(**params.model_dump()))
+        print(res)
+        return Response(True, "", res)
 
     except Exception as e:
         return Response(False, str(e), None)
