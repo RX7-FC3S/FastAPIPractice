@@ -55,3 +55,18 @@ def get_inbound_order_headers(
         )
     except Exception as e:
         return Response(False, str(e), None)
+
+
+@router.get('/get_inbound_order_header_by_id', response_model=schema.Response.GetInboundOrderHeaderById)
+def get_inbound_order_header_by_id(
+    id: int,
+    db: Session = Depends(create_session),
+):  
+    try:
+        db_inbound_order_header = crud.crud_inbound_order_header.get(db, id)
+        if not db_inbound_order_header:
+            return Response(False, f"入库订单(id={id})不存在", None)
+        return Response(True, "", db_inbound_order_header)
+    except Exception as e:
+        return Response(False, str(e), None)
+    

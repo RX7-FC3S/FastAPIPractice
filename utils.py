@@ -59,7 +59,7 @@ def as_advanced_query_and_order_schema() -> Callable[[type[SQLModel]], SQLModel]
 def advanced_query_and_order(
     master_model: SQLModelMetaclass,
     query_params: SQLModel,
-    order_params: list[AdvancedOrderField],
+    order_params: list[AdvancedOrderField] | None = None,
     statement: Select | SelectOfScalar | None = None,
     mappings: dict[str, SQLModelMetaclass] | None = None,
 ) -> Select | SelectOfScalar:
@@ -122,6 +122,9 @@ def advanced_query_and_order(
                     pass
 
     add_where_clause(query_params.model_dump(exclude_none=True))
+
+    if order_params is None:
+        return stmt
 
     for order_condition in order_params:
 

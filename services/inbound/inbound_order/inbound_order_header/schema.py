@@ -1,5 +1,5 @@
 from utils import as_advanced_query_and_order_schema
-from common.response import ResponseBase
+from common.response import as_response_data
 from common.schema import DataSchemaBase
 from fastapi_pagination import Page
 from sqlmodel import SQLModel
@@ -11,7 +11,7 @@ from services.basic_data.business.stakeholder.schema import Stakeholder
 from services.basic_data.business.order_type.schema import OrderType
 
 
-class OrderType(OrderType.select(include=["order_type_name"])):
+class OrderType2(OrderType.select(include=["order_type_name"])):
     pass
 
 
@@ -26,7 +26,7 @@ class Receiver(Stakeholder.select(include=["stakeholder_name", "contact", "phone
 class InboundOrderHeader(DataSchemaBase):
     inbound_order_number: str
     related_order_number: Optional[str]
-    order_type: OrderType
+    order_type: OrderType2
     sender: Sender
     receiver: Receiver
 
@@ -45,8 +45,21 @@ class Request:
 
 
 class Response:
-    class AddInboundOrderHeader(ResponseBase[Request.AddInboundOrderHeader]):
+    @as_response_data()
+    class AddInboundOrderHeader(InboundOrderHeader):
+        id: int
+        order_type_id: int
+        sender_id: int
+        receiver_id: int
+
+    @as_response_data()
+    class GetInboundOrderHeaders(Page[InboundOrderHeader]):
         pass
 
-    class GetInboundOrderHeaders(ResponseBase[Page[InboundOrderHeader]]):
-        pass
+    @as_response_data()
+    class GetInboundOrderHeaderById(InboundOrderHeader):
+        id: int
+        order_type_id: int
+        sender_id: int
+        receiver_id: int
+
