@@ -38,7 +38,7 @@ class Request:
         order_type_id: int
         sender_id: int
         receiver_id: int
-
+    
     @as_advanced_query_and_order_schema()
     class GetInboundOrderHeaders(InboundOrderHeader):
         pass
@@ -47,6 +47,13 @@ class Request:
 class Response:
     @as_response_data()
     class AddInboundOrderHeader(InboundOrderHeader):
+        id: int
+        order_type_id: int
+        sender_id: int
+        receiver_id: int
+    
+    @as_response_data()
+    class DeleteInboundOrderHeader(InboundOrderHeader.select(exclude=['sender', 'receiver', 'order_type'])):
         id: int
         order_type_id: int
         sender_id: int

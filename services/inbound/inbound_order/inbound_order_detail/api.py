@@ -17,7 +17,7 @@ router = APIRouter()
 @router.post(
     "/add_inbound_order_detail",
     response_model=schema.Response.AddInboundOrderDetail,
-    tags=["入库订单", "入库订单明细", "增"],
+    tags=["入库订单", "入库订单明细"],
 )
 def add_inbound_order_detail(params: schema.Request.AddInboundOrderDetail, db: Session = Depends(create_session)):
     try:
