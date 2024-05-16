@@ -16,7 +16,7 @@ def as_response_data():
         return create_model(f'{cls.__name__}AsResponse', __base__=None, **{
             'success': (bool, FieldInfo(required=True)),
             'message': (str, FieldInfo(required=True)),
-            'data': (cls, FieldInfo(required=True))
+            'data': (cls | None, FieldInfo(required=False))
         }) # type: ignore
     return wrapper
 

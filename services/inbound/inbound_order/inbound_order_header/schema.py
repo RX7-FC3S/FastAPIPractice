@@ -31,6 +31,12 @@ class InboundOrderHeader(DataSchemaBase):
     receiver: Receiver
 
 
+class DBInboundOrderHeader(InboundOrderHeader):
+    order_type_id: int
+    sender_id: int
+    receiver_id: int
+
+
 class Request:
     class AddInboundOrderHeader(SQLModel):
         inbound_order_number: str
@@ -38,7 +44,15 @@ class Request:
         order_type_id: int
         sender_id: int
         receiver_id: int
-    
+
+    class UpdateInboundOrderHeader(SQLModel):
+        id: int
+        inbound_order_number: str
+        related_order_number: Optional[str]
+        order_type_id: int
+        sender_id: int
+        receiver_id: int
+
     @as_advanced_query_and_order_schema()
     class GetInboundOrderHeaders(InboundOrderHeader):
         pass
@@ -46,27 +60,23 @@ class Request:
 
 class Response:
     @as_response_data()
-    class AddInboundOrderHeader(InboundOrderHeader):
-        id: int
-        order_type_id: int
-        sender_id: int
-        receiver_id: int
-    
+    class AddInboundOrderHeader(DBInboundOrderHeader):
+        pass
+
     @as_response_data()
-    class DeleteInboundOrderHeader(InboundOrderHeader.select(exclude=['sender', 'receiver', 'order_type'])):
-        id: int
-        order_type_id: int
-        sender_id: int
-        receiver_id: int
+    class DeleteInboundOrderHeader(
+        InboundOrderHeader.select(exclude=["sender", "receiver", "order_type"])
+    ):
+        pass
+
+    @as_response_data()
+    class UpdateInboundOrderHeader(InboundOrderHeader):
+        pass
 
     @as_response_data()
     class GetInboundOrderHeaders(Page[InboundOrderHeader]):
         pass
 
     @as_response_data()
-    class GetInboundOrderHeaderById(InboundOrderHeader):
-        id: int
-        order_type_id: int
-        sender_id: int
-        receiver_id: int
-
+    class GetInboundOrderHeaderById(DBInboundOrderHeader):
+        pass

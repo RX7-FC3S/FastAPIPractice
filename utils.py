@@ -14,6 +14,10 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
+def datetime_now():
+    return datetime.now().replace(microsecond=0)
+
+
 def get_deepest_field_type(field_info) -> str:
     field_type = field_info["schema"]["type"]
     if field_type in ["default", "nullable"]:

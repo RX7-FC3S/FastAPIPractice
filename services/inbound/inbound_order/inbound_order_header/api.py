@@ -55,6 +55,27 @@ def delete_inbound_order_header(id: int, db: Session = Depends(create_session)):
         return Response(False, str(e), None)
 
 
+@router.put(
+    "/update_inbound_order_header",
+    response_model=schema.Response.UpdateInboundOrderHeader,
+)
+def update_inbound_order_header(
+    params: schema.Request.UpdateInboundOrderHeader,
+    db: Session = Depends(create_session),
+):
+    try:
+        print('*'*100)
+        return Response(
+            True,
+            "",
+            crud.crud_inbound_order_header.update(
+                db, model.InboundOrderHeader(**params.model_dump())
+            ),
+        )
+    except Exception as e:
+        return Response(False, str(e), None)
+
+
 @router.post(
     "/get_inbound_order_headers",
     response_model=schema.Response.GetInboundOrderHeaders,
