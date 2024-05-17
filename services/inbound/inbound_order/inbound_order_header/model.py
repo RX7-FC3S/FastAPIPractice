@@ -27,4 +27,4 @@ class InboundOrderHeader(DataModelBase, table=True):
     receiver_id: int = Field(nullable=False, foreign_key="stakeholder.id")
     receiver: Stakeholder = Relationship(sa_relationship_kwargs={"foreign_keys": "[InboundOrderHeader.receiver_id]"})
 
-    inbound_order_details: "InboundOrderDetail" = Relationship()
+    inbound_order_details: list["InboundOrderDetail"] = Relationship()

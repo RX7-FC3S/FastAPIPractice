@@ -13,14 +13,18 @@ router = APIRouter()
 
 
 @router.post("/add_item", response_model=schema.Response.AddItem)
-async def add_item(params: schema.Request.AddItem, db: Session = Depends(create_session)):
+async def add_item(
+    params: schema.Request.AddItem, db: Session = Depends(create_session)
+):
     try:
-        db_item = crud.crud_item.get_by_item_code(db, params.item_code)
+        db_item = crud.crud_item_info.get_by_item_code(db, params.item_code)
 
         if db_item:
             return Response(False, "Item already exists", db_item)
 
-        return Response(True, "", crud.crud_item.add(db, model.ItemInfo(**params.model_dump())))
+        return Response(
+            True, "", crud.crud_item_info.add(db, model.ItemInfo(**params.model_dump()))
+        )
 
     except Exception as e:
         return Response(False, str(e), None)
@@ -34,6 +38,13 @@ async def get_items(
     db: Session = Depends(create_session),
 ):
     try:
-        return Response(True, "", paginate(crud.crud_item.get_items(db, query_params, order_params), pagination_params))
+        return Response(
+            True,
+            "",
+            paginate(
+                crud.crud_item_info.get_items(db, query_params, order_params),
+                pagination_params,
+            ),
+        )
     except Exception as e:
         return Response(False, str(e), None)

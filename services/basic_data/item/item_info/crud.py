@@ -18,4 +18,4 @@ class CRUDItem(CRUDBase[model.ItemInfo]):
         return db.exec(stmt).all()
 
 
-crud_item = CRUDItem(model.ItemInfo)
+crud_item_info = CRUDItem(model.ItemInfo)
