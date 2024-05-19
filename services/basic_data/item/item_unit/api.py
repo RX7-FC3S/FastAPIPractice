@@ -16,8 +16,35 @@ def add_item_unit(params: schema.Request.AddItemUnit, db: Session = Depends(crea
     return crud.crud_item_unit.add(db, model.ItemUint(**params.model_dump()))
 
 
-@router.get("/get_item_units_by_item_id", response_model=schema.Response.GetItemUnitsByItemId)
-def get_item_units_by_item_id(
-    params: schema.Request.GetItemUnitsByItemId = Depends(), db: Session = Depends(create_session)
+@router.post("/get_item_units", response_model=schema.Response.GetItemUnits)
+def get_item_units(
+    query_params: schema.Request.GetItemUnits,
+    order_params: list[AdvancedOrderField],
+    pagination_params: PaginationParams,
+    db: Session = Depends(create_session),
 ):
-    return Response(True, "", crud.crud_item_unit.get_item_units_by_item_id(db, params.item_id))
+
+    return Response(
+        True,
+        "",
+        paginate(
+            crud.crud_item_unit.get_item_units(
+                db,
+                query_params,
+                order_params,
+            ),
+            pagination_params,
+        ),
+    )
+
+
+@router.get("/get_item_units_by_item_id", response_model=schema.Response.GetItemUnitsByItemId)
+def get_item_units_by_item_id(item_id: int, db: Session = Depends(create_session)):
+    try:
+        return Response(
+            True,
+            "",
+            crud.crud_item_unit.get_item_units_by_item_id(db, item_id),
+        )
+    except Exception as e:
+        return Response(False, str(e), None)

@@ -8,12 +8,9 @@ from . import schema
 from . import model
 from . import crud
 
-from services.inbound.inbound_order.inbound_order_header.crud import (
-    crud_inbound_order_header,
-)
-
 from services.basic_data.item.item_info.crud import crud_item_info
 from services.basic_data.item.item_unit.crud import crud_item_unit
+from services.inbound.inbound_order.inbound_order_header.crud import crud_inbound_order_header
 
 router = APIRouter()
 
@@ -23,13 +20,9 @@ router = APIRouter()
     response_model=schema.Response.AddInboundOrderDetail,
     tags=["入库订单", "入库订单明细"],
 )
-def add_inbound_order_detail(
-    params: schema.Request.AddInboundOrderDetail, db: Session = Depends(create_session)
-):
+def add_inbound_order_detail(params: schema.Request.AddInboundOrderDetail, db: Session = Depends(create_session)):
     try:
-        db_inbound_order_header = crud_inbound_order_header.get(
-            db, params.inbound_order_header_id
-        )
+        db_inbound_order_header = crud_inbound_order_header.get(db, params.inbound_order_header_id)
 
         if not db_inbound_order_header:
             return Response(
@@ -39,10 +32,7 @@ def add_inbound_order_detail(
             )
 
         db_inbound_order_details = db_inbound_order_header.inbound_order_details
-        print('*'*100, db_inbound_order_details)
-        current_seq = (
-            len(db_inbound_order_details) if db_inbound_order_details else 0
-        ) + 1
+        current_seq = (len(db_inbound_order_details) if db_inbound_order_details else 0) + 1
 
         db_item = crud_item_info.get(db, params.item_id)
 
@@ -69,14 +59,12 @@ def add_inbound_order_detail(
             quantity_of_pieces=quantity_of_pieces,
         )
 
-        return Response(
-            True, "", crud.crud_inbound_order_detail.add(db, inbound_order_detail)
-        )
+        return Response(True, "", crud.crud_inbound_order_detail.add(db, inbound_order_detail))
     except Exception as e:
         return Response(False, str(e), None)
-    
 
-@router.delete('/delete_inbound_order_detail', response_model=schema.Response.DeleteInboundOrderDetail)
+
+@router.delete("/delete_inbound_order_detail", response_model=schema.Response.DeleteInboundOrderDetail)
 def delete_inbound_order_detail(id: int, db: Session = Depends(create_session)):
     try:
         return Response(True, "", crud.crud_inbound_order_detail.delete(db, id))
@@ -96,9 +84,7 @@ def get_inbound_order_details(
             True,
             "",
             paginate(
-                crud.crud_inbound_order_detail.get_inbound_order_details(
-                    db, query_params, order_params
-                ),
+                crud.crud_inbound_order_detail.get_inbound_order_details(db, query_params, order_params),
                 pagination_params,
             ),
         )

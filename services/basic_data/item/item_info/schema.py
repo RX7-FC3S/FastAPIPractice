@@ -6,6 +6,8 @@ from sqlmodel import SQLModel
 
 from . import model
 
+from services.basic_data.item.item_unit.model import ItemUint
+
 
 class ItemInfo(DataSchemaBase):
     item_code: str
@@ -13,19 +15,20 @@ class ItemInfo(DataSchemaBase):
 
 
 class Request:
-    class AddItem(ItemInfo):
-        pass
+    class AddItemInfo(SQLModel):
+        item_code: str
+        item_name: str
 
     @as_advanced_query_and_order_schema()
-    class GetItems(ItemInfo):
+    class GetItemInfos(ItemInfo):
         pass
 
 
 class Response:
     @as_response_data()
-    class AddItem(ItemInfo):
+    class AddItemInfo(ItemInfo):
         pass
 
     @as_response_data()
-    class GetItems(Page[ItemInfo]):
+    class GetItemInfos(Page[ItemInfo]):
         pass

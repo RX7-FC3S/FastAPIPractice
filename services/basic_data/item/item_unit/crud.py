@@ -7,16 +7,17 @@ from . import model
 
 
 class CRUDItemUnit(CRUDBase[model.ItemUint]):
+
+    def get_item_units(self, db: Session, query_params, order_params):
+        stmt = advanced_query_and_order(model.ItemUint, query_params, order_params)
+        return db.exec(stmt).all()
+
     def get_item_units_by_item_id(self, db: Session, item_id: int):
         stmt = select(self.model).where(self.model.item_id == item_id)
         return db.exec(stmt).all()
 
-    def get_item_base_unit_bu_item_id(
-        self, db: Session, item_id: int
-    ) -> model.ItemUint | None:
-        stmt = select(self.model).where(
-            self.model.item_id == item_id, self.model.unit_type == 0
-        )
+    def get_item_base_unit_bu_item_id(self, db: Session, item_id: int) -> model.ItemUint | None:
+        stmt = select(self.model).where(self.model.item_id == item_id, self.model.unit_type == 0)
         return db.exec(stmt).first()
 
 
