@@ -23,60 +23,60 @@ class Receiver(Stakeholder.select(include=["stakeholder_name", "contact", "phone
     pass
 
 
-class InboundOrderHeader(DataSchemaBase):
-    inbound_order_number: str
+class ReceivingListHeader(DataSchemaBase):
+    receiving_list_number: str
     related_order_number: Optional[str]
     order_type: OrderType2
     sender: Sender
     receiver: Receiver
 
 
-class DBInboundOrderHeader(InboundOrderHeader):
+class DBReceivingListHeader(ReceivingListHeader):
     order_type_id: int
     sender_id: int
     receiver_id: int
 
 
 class Request:
-    class AddInboundOrderHeader(SQLModel):
-        inbound_order_number: str
+    class AddReceivingListHeader(SQLModel):
+        receiving_list_number: str
         related_order_number: Optional[str]
         order_type_id: int
         sender_id: int
         receiver_id: int
 
-    class UpdateInboundOrderHeader(SQLModel):
+    class UpdateReceivingListHeader(SQLModel):
         id: int
-        inbound_order_number: str
+        receiving_list_number: str
         related_order_number: Optional[str]
         order_type_id: int
         sender_id: int
         receiver_id: int
 
     @as_advanced_query_and_order_schema()
-    class GetInboundOrderHeaders(InboundOrderHeader):
+    class GetReceivingListHeaders(ReceivingListHeader):
         pass
 
 
 class Response:
     @as_response_data()
-    class AddInboundOrderHeader(DBInboundOrderHeader):
+    class AddReceivingListHeader(DBReceivingListHeader):
         pass
 
     @as_response_data()
-    class DeleteInboundOrderHeader(
-        InboundOrderHeader.select(exclude=["sender", "receiver", "order_type"])
+    class DeleteReceivingListHeader(
+        ReceivingListHeader.select(exclude=["sender", "receiver", "order_type"])
     ):
         pass
 
     @as_response_data()
-    class UpdateInboundOrderHeader(InboundOrderHeader):
+    class UpdateReceivingListHeader(ReceivingListHeader):
         pass
 
     @as_response_data()
-    class GetInboundOrderHeaders(Page[InboundOrderHeader]):
+    class GetReceivingListHeaders(Page[ReceivingListHeader]):
         pass
 
     @as_response_data()
-    class GetInboundOrderHeaderById(DBInboundOrderHeader):
+    class GetReceivingListHeaderById(DBReceivingListHeader):
         pass

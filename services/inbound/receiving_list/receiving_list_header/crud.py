@@ -10,17 +10,17 @@ from services.basic_data.business.order_type.model import OrderType
 from services.basic_data.business.stakeholder.model import Stakeholder
 
 
-class CRUDInboundOrderHeader(CRUDBase[model.InboundOrderHeader]):
-    def get_by_inbound_order_number(self, db: Session, inbound_order_number: str):
+class CRUDReceivingListHeader(CRUDBase[model.ReceivingListHeader]):
+    def get_by_inbound_order_number(self, db: Session, receiving_list_number: str):
         stmt = select(self.model).where(
-            self.model.inbound_order_number == inbound_order_number
+            self.model.receiving_list_number == receiving_list_number
         )
         return db.exec(stmt).all()
 
-    def get_inbound_order_headers(
+    def get_receiving_list_headers(
         self,
         db: Session,
-        query_params: schema.Request.GetInboundOrderHeaders,
+        query_params: schema.Request.GetReceivingListHeaders,
         order_params: list[AdvancedOrderField],
     ):
     
@@ -33,4 +33,4 @@ class CRUDInboundOrderHeader(CRUDBase[model.InboundOrderHeader]):
         return db.exec(stmt).all()
 
 
-crud_inbound_order_header = CRUDInboundOrderHeader(model.InboundOrderHeader)
+crud_receiving_list_header = CRUDReceivingListHeader(model.ReceivingListHeader)

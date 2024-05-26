@@ -6,8 +6,9 @@ if TYPE_CHECKING:
     from services.basic_data.item.item_info.model import ItemInfo
 
 
-class ItemUint(DataModelBase, table=True):
-    item_id: int = Field(foreign_key="item_info.id")
+class ItemUnit(DataModelBase, table=True):
+
+    item_info_id: int = Field(foreign_key="item_info.id")
     item_info: "ItemInfo" = Relationship(back_populates="item_units")
 
     unit_type: int  # pcs = 0, ctn = 1, plt = 2

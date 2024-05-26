@@ -1,8 +1,9 @@
 from utils import as_advanced_query_and_order_schema
-from common.response import as_response_data
+from common.response import as_response_data, ResponseBase
 from common.schema import DataSchemaBase
 from fastapi_pagination import Page
 from sqlmodel import SQLModel, Sequence
+from typing import Any, List
 
 from . import model
 
@@ -15,17 +16,28 @@ class ItemUnit(DataSchemaBase):
 
     conversion_quantity: int
 
+class DBItemUnit(ItemUnit):
+    item_info_id: int
+
 
 class Request:
     class AddItemUnit(SQLModel):
-        item_id: int
+        item_info_id: int
         unit_type: int
         unit_name: str
         conversion_quantity: int
 
     @as_advanced_query_and_order_schema()
     class GetItemUnits(ItemUnit):
-        item_id: int
+        item_info_id: int
+
+
+from typing import Generic, TypeVar
+
+T = TypeVar('T')
+
+class DataList(list, Generic[T]):
+    pass
 
 
 class Response:
@@ -37,6 +49,7 @@ class Response:
     class GetItemUnits(Page[ItemUnit]):
         pass
 
-    @as_response_data()
-    class GetItemUnitsByItemId(Page[ItemUnit]):
+    
+    class GetItemUnitsByItemId(ResponseBase[list[DBItemUnit]]):
         pass
+        

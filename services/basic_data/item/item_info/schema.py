@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 
 from . import model
 
-from services.basic_data.item.item_unit.model import ItemUint
+from services.basic_data.item.item_unit.model import ItemUnit
 
 
 class ItemInfo(DataSchemaBase):

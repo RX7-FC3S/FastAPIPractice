@@ -47,16 +47,16 @@ app.include_router(router_item_unit)
 # - 入库管理
 # -- 入库订单
 # --- 入库订单头
-from services.inbound.inbound_order.inbound_order_header.api import router as router_inbound_order_header
+from services.inbound.receiving_list.receiving_list_header.api import router as router_receiving_list_header
 
-app.include_router(router_inbound_order_header)
+app.include_router(router_receiving_list_header)
 
 # --- 入库订单明细
-from services.inbound.inbound_order.inbound_order_detail.api import router as router_inbound_order_detail
+from services.inbound.receiving_list.receiving_list_detail.api import router as router_receiving_list_detail
 
-app.include_router(router_inbound_order_detail)
+app.include_router(router_receiving_list_detail)
 
 disable_installed_extensions_check()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True)
+    uvicorn.run("main:app",port=8000, reload=True)

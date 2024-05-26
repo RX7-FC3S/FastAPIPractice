@@ -5,6 +5,7 @@ from sqlmodel import SQLModel
 
 T = TypeVar("T")
 
+
 class ResponseBase(BaseModel, Generic[T]):
     success: bool
     message: str
@@ -13,13 +14,17 @@ class ResponseBase(BaseModel, Generic[T]):
 
 def as_response_data():
     def wrapper(cls: type[SQLModel]) -> type[SQLModel]:
-        return create_model(f'{cls.__name__}AsResponse', __base__=None, **{
-            'success': (bool, FieldInfo(required=True)),
-            'message': (str, FieldInfo(required=True)),
-            'data': (cls | None, FieldInfo(required=False))
-        }) # type: ignore
-    return wrapper
+        return create_model(
+            f"{cls.__name__}AsResponse",
+            __base__=None,
+            **{
+                "success": (bool, FieldInfo(required=True)),
+                "message": (str, FieldInfo(required=True)),
+                "data": (cls | None , FieldInfo(required=False)),
+            },
+        )  # type: ignore
 
+    return wrapper
 
 
 class Response(object):

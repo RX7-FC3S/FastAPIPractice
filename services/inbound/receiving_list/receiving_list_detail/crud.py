@@ -7,11 +7,11 @@ from . import model
 from . import schema
 
 
-class CRUDInboundOrderDetail(CRUDBase[model.InboundOrderDetail]):
-    def get_inbound_order_details(
+class CRUDReceivingListDetail(CRUDBase[model.ReceivingListDetail]):
+    def get_receiving_list_details(
         self,
         db: Session,
-        query_params: schema.Request.GetInboundOrderDetails,
+        query_params: schema.Request.GetReceivingListDetails,
         order_params: list[AdvancedOrderField],
     ):
         stmt = advanced_query_and_order(
@@ -20,4 +20,4 @@ class CRUDInboundOrderDetail(CRUDBase[model.InboundOrderDetail]):
         return db.exec(stmt).all()
 
 
-crud_inbound_order_detail = CRUDInboundOrderDetail(model.InboundOrderDetail)
+crud_receiving_list_detail = CRUDReceivingListDetail(model.ReceivingListDetail)

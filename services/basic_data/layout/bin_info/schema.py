@@ -39,7 +39,7 @@ class Request:
         id: int
 
     @as_advanced_query_and_order_schema()
-    class GetBinsInfo(BinInfo):
+    class GetBinInfos(BinInfo):
         pass
 
 
@@ -50,5 +50,5 @@ class Response:
     class DeleteBinInfo(ResponseBase[BinInfo]):
         pass
 
-    class GetBinsInfo(ResponseBase[Page[BinInfo]]):
+    class GetBinInfos(ResponseBase[Page[BinInfo]]):
         pass

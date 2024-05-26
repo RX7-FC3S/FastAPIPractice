@@ -11,12 +11,22 @@ from . import crud
 router = APIRouter()
 
 
-@router.post("/add_item_unit", response_model=schema.Response.AddItemUnit, tags=["物料单位", "增"])
-def add_item_unit(params: schema.Request.AddItemUnit, db: Session = Depends(create_session)):
-    return crud.crud_item_unit.add(db, model.ItemUint(**params.model_dump()))
+@router.post(
+    "/add_item_unit",
+    response_model=schema.Response.AddItemUnit,
+    tags=["物料单位"],
+)
+def add_item_unit(
+    params: schema.Request.AddItemUnit, db: Session = Depends(create_session)
+):
+    return crud.crud_item_unit.add(db, model.ItemUnit(**params.model_dump()))
 
 
-@router.post("/get_item_units", response_model=schema.Response.GetItemUnits)
+@router.post(
+    "/get_item_units",
+    response_model=schema.Response.GetItemUnits,
+    tags=["物料单位"],
+)
 def get_item_units(
     query_params: schema.Request.GetItemUnits,
     order_params: list[AdvancedOrderField],
@@ -38,13 +48,18 @@ def get_item_units(
     )
 
 
-@router.get("/get_item_units_by_item_id", response_model=schema.Response.GetItemUnitsByItemId)
-def get_item_units_by_item_id(item_id: int, db: Session = Depends(create_session)):
+@router.get(
+    "/get_item_units_by_item_info_id",
+    response_model=schema.Response.GetItemUnitsByItemId,
+    tags=["物料单位"],
+)
+def get_item_units_by_item_id(item_info_id: int, db: Session = Depends(create_session)):
     try:
+
+        print(schema.Response.GetItemUnitsByItemId.__dict__)
+
         return Response(
-            True,
-            "",
-            crud.crud_item_unit.get_item_units_by_item_id(db, item_id),
+            True, "", crud.crud_item_unit.get_item_units_by_item_info_id(db, item_info_id)
         )
     except Exception as e:
         return Response(False, str(e), None)

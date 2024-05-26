@@ -25,10 +25,10 @@ class CRUDBinInfo(CRUDBase[model.BinInfo]):
         )
         return db.exec(stmt).all()
 
-    def get_bins_info(
+    def get_bin_infos(
         self,
         db: Session,
-        query_params: schema.Request.GetBinsInfo,
+        query_params: schema.Request.GetBinInfos,
         order_params: list[AdvancedOrderField],
     ):
 

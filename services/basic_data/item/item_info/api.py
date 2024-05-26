@@ -8,15 +8,19 @@ from . import schema
 from . import model
 from . import crud
 
-from services.basic_data.item.item_unit.model import ItemUint
+from services.basic_data.item.item_unit.model import ItemUnit
 from services.basic_data.item.item_unit.crud import crud_item_unit
 
 
 router = APIRouter()
 
 
-@router.post("/add_item_info", response_model=schema.Response.AddItemInfo)
-async def add_item_info(params: schema.Request.AddItemInfo, db: Session = Depends(create_session)):
+@router.post(
+    "/add_item_info", response_model=schema.Response.AddItemInfo, tags=["物料信息"]
+)
+async def add_item_info(
+    params: schema.Request.AddItemInfo, db: Session = Depends(create_session)
+):
     try:
         db_item = crud.crud_item_info.get_item_by_item_code(db, params.item_code)
 
@@ -26,7 +30,12 @@ async def add_item_info(params: schema.Request.AddItemInfo, db: Session = Depend
         db_item = crud.crud_item_info.add(db, model.ItemInfo(**params.model_dump()))
 
         assert db_item.id is not None
-        crud_item_unit.add(db, ItemUint(item_id=db_item.id, unit_type=0, unit_name="PCS", conversion_quantity=1))
+        crud_item_unit.add(
+            db,
+            ItemUnit(
+                item_info_id=db_item.id, unit_type=0, unit_name="PCS", conversion_quantity=1
+            ),
+        )
 
         return Response(True, "", db_item)
 

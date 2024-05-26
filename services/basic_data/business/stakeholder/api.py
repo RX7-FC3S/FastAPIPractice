@@ -12,7 +12,9 @@ from . import crud
 router = APIRouter()
 
 
-@router.post("/get_stakeholders", response_model=schema.Response.GetStakeholders)
+@router.post(
+    "/get_stakeholders", response_model=schema.Response.GetStakeholders, tags=["参与方"]
+)
 def get_stakeholders(
     query_params: schema.Request.GetStakeholders,
     order_params: list[AdvancedOrderField],
