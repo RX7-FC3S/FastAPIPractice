@@ -56,7 +56,14 @@ from services.inbound.receiving_list.receiving_list_detail.api import router as 
 
 app.include_router(router_receiving_list_detail)
 
-disable_installed_extensions_check()
+
+from services.inbound.receiving_list.receiving_record.api import router as router_receiving_record
+
+app.include_router(router_receiving_record)
+
+
+disable_installed_extensions_check() 
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app",port=8000, reload=True)
